@@ -1,5 +1,6 @@
 package com.letscode.alunos.service;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.letscode.alunos.entity.Aluno;
 import com.letscode.alunos.repository.AlunoRepository;
 import org.junit.jupiter.api.Assertions;
@@ -149,7 +150,7 @@ class AlunoServiceImplTest {
 
     @Test
     @DisplayName("Deve retornar excessao quando aluno nao for encontrado para delecao")
-    void deveRetornarExcessaoQuandoAlunoNaoForEncontradoParaDelecao() {;
+    void deveRetornarExcessaoQuandoAlunoNaoForEncontradoParaDelecao() {
         Exception exception = assertThrows(Exception.class,
                 () -> alunoService.delete(aluno.getId()));
 
@@ -182,5 +183,40 @@ class AlunoServiceImplTest {
         Assertions.assertEquals("Aluno Teste", alunos.get(0).getNome());
     }
 
+    @Test
+    @DisplayName("Deve buscar uma lista de alunos pela idade")
+    public void deveBuscarUmaListaDeAlunosPelaIdade(){
+        Mockito.when(alunoRepository.findAllByIdade(anyLong())).thenReturn(List.of(aluno));
+        List<Aluno>alunos = alunoService.buscaPorIdade(aluno.getIdade());
+
+        Assertions.assertAll(
+                () -> Assertions.assertEquals("Aluno Teste", alunos.get(0).getNome()),
+                () -> Assertions.assertEquals( aluno,alunos.get(0))
+        );
+    }
+
+    @Test
+    @DisplayName("Deve buscar o aluno somente pela idade")
+    void deveBuscarOAlunoSomentePeloIdade() {
+        Mockito.when(alunoRepository.findAllByIdade(anyLong())).thenReturn(List.of(aluno));
+        List<Aluno> alunos = alunoService.filter(null, aluno.getIdade(), null);
+        Assertions.assertEquals("Aluno Teste", alunos.get(0).getNome());
+    }
+
+    @Test
+    @DisplayName("Deve buscar o aluno que nao existe")
+    void deveBuscarOAlunoQueNaoExiste() {
+      //  Mockito.when(alunoRepository.findAllByIdade(anyLong())).thenReturn(null); Não precisa de mockar pois o codigo não passa no repositorio
+        List<Aluno> alunos = alunoService.filter(any(), any(), any());
+        Assertions.assertEquals(0,alunos.size());
+    }
+
+    @Test
+    @DisplayName("Deve buscar o aluno que existe por todos os dados")
+    void deveBuscarOAlunoQueExistePorTodosOsDados() {
+        Mockito.when(alunoRepository.findByNomeAndIdadeAndDocumento(any(),any(),any())).thenReturn(Optional.of(aluno));
+        List<Aluno> alunos = alunoService.filter(aluno.getNome(), aluno.getIdade(), aluno.getDocumento());
+        Assertions.assertEquals(aluno,alunos.get(0));
+    }
 
 }

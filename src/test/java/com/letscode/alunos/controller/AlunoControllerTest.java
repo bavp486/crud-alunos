@@ -1,5 +1,6 @@
 package com.letscode.alunos.controller;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.letscode.alunos.entity.Aluno;
 import com.letscode.alunos.service.AlunoService;
@@ -17,13 +18,13 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import javax.sound.midi.Patch;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -200,20 +201,81 @@ class AlunoControllerTest {
         Assertions.assertEquals("Jonathan2", aluno1.getNome());
     }
 
+@Test
+    @DisplayName("Deve alterar o nome do aluno quando buscar por id")
+    public void deveAlterarONomeDoAlunoQuandoBuscarPorId() throws Exception {
+        when(alunoService.alterarAluno(anyLong(),anyString())).thenReturn(aluno);
 
+        MvcResult result = mockMvc.perform(patch("/alunos/{id}/{nome}",aluno.getId(),aluno.getNome())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+        Aluno aluno1 = objectMapper.readValue(result.getResponse().getContentAsString(),Aluno.class);
+        Assertions.assertEquals("Jonathan2",aluno1.getNome());
+    }
 
+    @Test
+    @DisplayName("Deve retornar a mensagem de deletado quando buscar por id")
+    public void deveRetornarAMensagemDeDeletadoQuandoBuscarPorId() throws Exception {
+        when(alunoService.delete(anyLong())).thenReturn("Aluno deletado");
 
+        MvcResult result = mockMvc.perform(delete("/alunos/{id}", aluno.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+        String resposta = result.getResponse().getContentAsString();
+        Assertions.assertEquals("Aluno deletado",resposta);
+    }
 
+    @Test
+    @DisplayName("Deve retornar uma lista de aluno quando buscar por nome")
+    public void deveRetornarUmaListaDeAlunoQuandoBuscarPorNome() throws Exception {
+        when(alunoService.buscaPorNome(anyString())).thenReturn(List.of(aluno));
 
+        MvcResult result = mockMvc.perform(get("/alunos/nomes")
+                        .param("nome","John")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+        List lista = objectMapper.readValue(result.getResponse().getContentAsString(),List.class);
 
+        Assertions.assertEquals(1,lista.size());
 
+    }
 
+    @Test
+        @DisplayName("Deve retornar uma lista de aluno quando buscar por idade")
+        public void deveRetornarUmaListaDeAlunoQuandoBuscarPorIdade() throws Exception {
+        when(alunoService.buscaPorIdade(anyLong())).thenReturn(List.of(aluno));
 
+        MvcResult result = mockMvc.perform(get("/alunos/idades")
+                        .param("idade","1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+        List lista = objectMapper.readValue(result.getResponse().getContentAsString(),List.class);
 
+        Assertions.assertEquals(1,lista.size());
 
+        }
 
+        @Test
+            @DisplayName("Deve retornar uma lista de aluno quando buscar por idade nome e documento")
+            public void deveRetornarUmaListaDeAlunoQuandoBuscarPorIdadeNomeEDocumento() throws Exception {
+                when(alunoService.filter(anyString(),anyLong(),anyString())).thenReturn(List.of(aluno));
 
+                MvcResult result = mockMvc.perform(get("/alunos/fiters")
+                        .param("nome","John")
+                        .param("idade", "1")
+                        .param("documento","cpfsss")
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().is2xxSuccessful())
+                        .andReturn();
+                List list = objectMapper.readValue(result.getResponse().getContentAsString(),List.class);
 
+            Assertions.assertEquals(1 , list.size());
+
+            }
 
     /*
     @Test
